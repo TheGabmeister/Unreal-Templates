@@ -2,6 +2,17 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Required first step: verify the Unreal setup
+
+At the start of every session, before doing anything else, check both of these:
+
+1. **The Unreal Engine skills are available.** The skills list must include the `unreal-engine-skills-for-claude-code` plugin's skills: `unreal-mcp`, `create-toolset` and `unreal-skill`.
+2. **The Unreal Engine MCP is working.** The `unreal-mcp` server must be connected in this session, with its tools callable (`list_toolsets`, `describe_toolset`, `call_tool`). Confirm this with a successful read-only call such as `list_toolsets`. A server that is configured but shown as failed or unreachable does not count.
+
+If either check fails, **stop immediately**. Don't start the task and don't look for workarounds, such as calling the server directly over HTTP. Tell the user that the setup isn't complete, say which check failed, and explain that they must fix the setup before you can continue. Common fixes:
+- The skills are missing: install or enable the `unreal-engine-skills-for-claude-code` plugin.
+- The MCP check fails: open the project in the editor so the server starts on `127.0.0.1:8000`, then type `/mcp` in the session and reconnect `unreal-mcp`, or start a new session. A session that started before the editor did won't retry the connection by itself.
+
 ## What this is
 
 `BlankProject` is a **Blueprint-only Unreal Engine 5.8 project template**, one of several templates in the `Unreal-Templates` repo (git root is the parent directory `D:/dev/Unreal-Templates`; the sibling `ThirdPerson/` is a separate C++ template on UE 5.7). It was created from Epic's `TP_BlankBP` template; `DefaultEngine.ini` keeps `ActiveGameNameRedirects` from `TP_BlankBP` → `/Script/BlankProject`, so don't remove them.
