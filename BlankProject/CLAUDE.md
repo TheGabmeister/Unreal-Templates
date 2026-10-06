@@ -52,3 +52,7 @@ Logs go to `Saved/Logs/BlankProject.log`.
 ## Editing assets
 
 `.uasset`/`.umap` files are binary, so change them through the editor and not as text. The `unreal-mcp` server lets Claude drive a running editor (spawn actors, edit Blueprints and materials, and so on), but it only connects while the editor is open. The server auto-starts through `bAutoStartServer=True` in `Saved/Config/WindowsEditor/EditorPerProjectUserSettings.ini`. That file is per-user and not committed, so on a fresh clone run `ModelContextProtocol.StartServer` in the editor console instead. The client connects to `http://127.0.0.1:8000/mcp`.
+
+## Coding convention
+- Follow KISS and YAGNI.  Use DRY when something repeats 3 or more times.
+- Follow Unreal Engine architecture best practices.

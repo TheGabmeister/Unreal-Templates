@@ -84,3 +84,7 @@ Logs go to `Saved/Logs/BlankProject.log`.
 The MCP server only connects while the editor is open. It auto-starts through `bAutoStartServer=True` in `Saved/Config/WindowsEditor/EditorPerProjectUserSettings.ini`. That file is per-user and not committed, so on a fresh clone run `ModelContextProtocol.StartServer` in the editor console instead. The client connects to `http://127.0.0.1:8000/mcp` through the configured MCP connection.
 
 Save affected assets before bulk changes and again afterward. Serialize dependent calls and mutations that affect the same asset or editor state, wait for compilation to finish, and check whether Play-in-Editor is active before using editor-only tools.
+
+## Coding convention
+- Follow KISS and YAGNI.  Use DRY when something repeats 3 or more times.
+- Follow Unreal Engine architecture best practices.
