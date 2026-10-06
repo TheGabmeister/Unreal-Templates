@@ -9,7 +9,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Current state:
 - No `Source/` folder and no `Modules` in `BlankProject.uproject`, so there's nothing to compile. Adding the first C++ class (Tools → New C++ Class in the editor) creates `Source/`, `*.Target.cs` files and a module entry in the `.uproject`. After that the project needs a C++ build before it will open.
 - `Content/` holds only editor-generated `Developers/` and `Collections/` folders. The startup map is the engine's `/Engine/Maps/Templates/OpenWorld` (`GameDefaultMap` in `Config/DefaultEngine.ini`), not a project asset.
-- The only extra plugin is `ModelingToolsEditorMode`, and it's editor-only.
+- Extra plugins: `ModelingToolsEditorMode` (editor-only), plus `ModelContextProtocol` and `AllToolsets`, which provide the `unreal-mcp` server and its tools.
 - Unlike `ThirdPerson/`, this project has no `.gitignore` yet. `Saved/`, `Intermediate/` and `DerivedDataCache/` exist on disk and must not be committed; copy `../ThirdPerson/.gitignore` before staging.
 
 ## Engine and commands
@@ -40,4 +40,4 @@ Logs go to `Saved/Logs/BlankProject.log`.
 
 ## Editing assets
 
-`.uasset`/`.umap` files are binary, so change them through the editor and not as text. The `unreal-mcp` server lets Claude drive a running editor (spawn actors, edit Blueprints and materials, and so on), but it only connects while the editor is open with the MCP plugin listening. To generate a project `.mcp.json`, run `ModelContextProtocol.GenerateClientConfig ClaudeCode` in the editor console.
+`.uasset`/`.umap` files are binary, so change them through the editor and not as text. The `unreal-mcp` server lets Claude drive a running editor (spawn actors, edit Blueprints and materials, and so on), but it only connects while the editor is open. The server auto-starts through `bAutoStartServer=True` in `Saved/Config/WindowsEditor/EditorPerProjectUserSettings.ini`. That file is per-user and not committed, so on a fresh clone run `ModelContextProtocol.StartServer` in the editor console instead. The client connects to `http://127.0.0.1:8000/mcp`.
