@@ -1,0 +1,43 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## What this is
+
+`BlankProject` is a **Blueprint-only Unreal Engine 5.8 project template**, one of several templates in the `Unreal-Templates` repo (git root is the parent directory `D:/dev/Unreal-Templates`; the sibling `ThirdPerson/` is a separate C++ template on UE 5.7). It was created from Epic's `TP_BlankBP` template; `DefaultEngine.ini` keeps `ActiveGameNameRedirects` from `TP_BlankBP` → `/Script/BlankProject`, so don't remove them.
+
+Current state:
+- No `Source/` folder and no `Modules` in `BlankProject.uproject`, so there's nothing to compile. Adding the first C++ class (Tools → New C++ Class in the editor) creates `Source/`, `*.Target.cs` files and a module entry in the `.uproject`. After that the project needs a C++ build before it will open.
+- `Content/` holds only editor-generated `Developers/` and `Collections/` folders. The startup map is the engine's `/Engine/Maps/Templates/OpenWorld` (`GameDefaultMap` in `Config/DefaultEngine.ini`), not a project asset.
+- The only extra plugin is `ModelingToolsEditorMode`, and it's editor-only.
+- Unlike `ThirdPerson/`, this project has no `.gitignore` yet. `Saved/`, `Intermediate/` and `DerivedDataCache/` exist on disk and must not be committed; copy `../ThirdPerson/.gitignore` before staging.
+
+## Engine and commands
+
+Engine install: `C:/Program Files/Epic Games/UE_5.8`.
+
+```bash
+# Open the editor
+"C:/Program Files/Epic Games/UE_5.8/Engine/Binaries/Win64/UnrealEditor.exe" "D:/dev/Unreal-Templates/BlankProject/BlankProject.uproject"
+
+# Run automation tests headlessly (replace the filter with a test name or prefix to run one test)
+"C:/Program Files/Epic Games/UE_5.8/Engine/Binaries/Win64/UnrealEditor-Cmd.exe" "D:/dev/Unreal-Templates/BlankProject/BlankProject.uproject" -ExecCmds="Automation RunTests Project; Quit" -unattended -nullrhi -nosplash -log
+
+# Cook and package for Windows
+"C:/Program Files/Epic Games/UE_5.8/Engine/Build/BatchFiles/RunUAT.bat" BuildCookRun -project="D:/dev/Unreal-Templates/BlankProject/BlankProject.uproject" -platform=Win64 -clientconfig=Development -cook -stage -pak -archive -archivedirectory="D:/dev/Unreal-Templates/BlankProject/Build"
+```
+
+Logs go to `Saved/Logs/BlankProject.log`.
+
+## Rendering and config baseline
+
+`Config/DefaultEngine.ini` targets high-end desktop. Assets and settings added to the template should stay compatible with these settings:
+- Static lighting is disabled (`r.AllowStaticLighting=False`). Lighting is Lumen GI and reflections (`DynamicGlobalIlluminationMethod=1`, `ReflectionMethod=1`), with Virtual Shadow Maps and mesh distance fields.
+- Hardware ray tracing is on, and **Substrate** materials are enabled (`r.Substrate=True`). New materials are authored as Substrate, not legacy shading models.
+- Windows uses DX12 with SM6; Linux targets Vulkan SM6 and Mac targets Metal SM6.
+- Input uses Enhanced Input (`DefaultPlayerInputClass`/`DefaultInputComponentClass` in `DefaultInput.ini`). Use Input Actions and Mapping Contexts, not legacy axis/action mappings.
+- `DefaultGame.ini` contains CommonUI settings.
+
+## Editing assets
+
+`.uasset`/`.umap` files are binary, so change them through the editor and not as text. The `unreal-mcp` server lets Claude drive a running editor (spawn actors, edit Blueprints and materials, and so on), but it only connects while the editor is open with the MCP plugin listening. To generate a project `.mcp.json`, run `ModelContextProtocol.GenerateClientConfig ClaudeCode` in the editor console.
