@@ -21,9 +21,35 @@ Common fixes:
 
 Template baseline (inspect the current files before relying on these details as the project evolves):
 - No `Source/` folder and no `Modules` in `BlankProject.uproject`, so there is nothing to compile. Adding the first C++ class (Tools → New C++ Class in the editor) creates `Source/`, `*.Target.cs` files and a module entry in the `.uproject`. After that the project needs a C++ build before it will open.
-- `Content/` holds only editor-generated `Developers/` and `Collections/` folders. The startup map is the engine's `/Engine/Maps/Templates/OpenWorld` (`GameDefaultMap` in `Config/DefaultEngine.ini`), not a project asset.
+- Project asset folders are organized under `Content/_Project/`; editor-generated `Developers/` and `Collections/` folders also exist. The startup map is the engine's `/Engine/Maps/Templates/OpenWorld` (`GameDefaultMap` in `Config/DefaultEngine.ini`), not a project asset.
 - Extra plugins: `ModelingToolsEditorMode` (editor-only), plus `ModelContextProtocol` and `AllToolsets`, which provide the `unreal-mcp` server and its tools.
 - `Saved/`, `Intermediate/` and `DerivedDataCache/` must not be committed. Before staging, check the ignore rules; if this project still has no `.gitignore`, copy `../ThirdPerson/.gitignore` and review it for this project.
+
+## Project asset organization
+
+Create all project-specific assets under `Content/_Project/` (`/Game/_Project/` in Unreal). Keep imported Marketplace/Fab packs in their original vendor or pack folders outside `_Project`, preserving their package paths. Put project-specific child Blueprints, material instances, duplicates, and adaptations of imported assets under `_Project`; references to the original pack assets are allowed.
+
+Use this folder structure, adding feature or asset subfolders as needed:
+
+```text
+Content/_Project/
+├── AI/               BehaviorTrees, Blackboards
+├── Animations/       BlendSpaces, Montages
+├── Audio/            Dialogue, Music, SFX
+├── Blueprints/       Characters, Components, Core, Gameplay, Interfaces
+├── Cinematics/
+├── Data/             Curves, DataAssets, DataTables
+├── Editor/           Project editor utilities
+├── Input/            Actions, MappingContexts
+├── Maps/             Gameplay, Tests
+├── Materials/        Functions, Instances, Master
+├── Meshes/           Skeletal, Static
+├── Textures/
+├── UI/               Fonts, Icons, Widgets
+└── VFX/              Niagara
+```
+
+Empty folders contain `.gitkeep` files so the structure survives Git checkout. These are placeholders, not Unreal assets. Use the editor/MCP to move or rename existing assets so references are updated; do not move `.uasset` or `.umap` files directly on disk.
 
 ## Engine and commands
 
