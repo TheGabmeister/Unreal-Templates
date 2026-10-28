@@ -11,7 +11,9 @@ At the start of every session, before doing anything else, check both of these:
 
 If either check fails, **stop immediately**. Don't start the task and don't look for workarounds, such as calling the server directly over HTTP. Tell the user that the setup isn't complete, say which check failed, and explain that they must fix the setup before you can continue. Common fixes:
 - The skills are missing: install or enable the `unreal-engine-skills-for-claude-code` plugin.
-- The MCP check fails: open the project in the editor so the server starts on `127.0.0.1:8000`, then type `/mcp` in the session and reconnect `unreal-mcp`, or start a new session. A session that started before the editor did won't retry the connection by itself.
+- The MCP check fails: open the project in the editor so the server starts on the project's port (see "MCP port" below), then type `/mcp` in the session and reconnect `unreal-mcp`, or start a new session. A session that started before the editor did won't retry the connection by itself.
+
+A successful check doesn't prove you're connected to *this* project: if another editor holds the port, calls go to that project instead. Before changing assets, confirm the connected editor is this project, for example by checking that `/Game/` contains this project's assets or that the editor log mentions this project's path.
 
 ## What this is
 
@@ -22,6 +24,36 @@ Template baseline (check the current files before relying on these details, sinc
 - Project assets go under `Content/_Project/` (see below). Editor-generated `Developers/` and `Collections/` folders also exist. The startup map is the engine's `/Engine/Maps/Templates/OpenWorld` (`GameDefaultMap` in `Config/DefaultEngine.ini`), not a project asset.
 - Extra plugins: `ModelingToolsEditorMode` (editor-only), plus `ModelContextProtocol` and `AllToolsets`, which provide the `unreal-mcp` server and its tools.
 - `.gitignore` excludes `Saved/`, `Intermediate/`, `DerivedDataCache/` and other generated files. Never commit those folders.
+
+## Creating a new project from this template
+
+When this folder is copied and renamed into a new project:
+1. Rename `BlankProject.uproject` to `<NewName>.uproject`, point the `ActiveGameNameRedirects` in `Config/DefaultEngine.ini` at `/Script/<NewName>`, and replace the `BlankProject` names and `D:/dev/Unreal-Templates/BlankProject` paths in this file and `AGENTS.md`.
+2. **Give the project its own MCP port.** See "MCP port" below. Skipping this is what lets two open editors collide.
+
+## MCP port
+
+Every Unreal editor's MCP server defaults to port 8000, and the first editor to start takes it. A second editor on the same port fails to start its server without an obvious error, and agent tool calls then go to the wrong project. This template itself uses 8000, so each project made from it needs its own port:
+- Pick an unused port from 8001 upward. To see which ports are taken, search the other projects under `D:/dev` for `ServerPortNumber` in `Config/DefaultEditorPerProjectUserSettings.ini` and for `127.0.0.1:` in `.mcp.json`.
+- Create `Config/DefaultEditorPerProjectUserSettings.ini`:
+  ```ini
+  [/Script/ModelContextProtocolEngine.ModelContextProtocolSettings]
+  ServerUrlPath=/mcp
+  ServerPortNumber=<port>
+  bAutoStartServer=True
+  bEnableToolSearch=True
+  ```
+- Create `.mcp.json` in the project root. It overrides the user-level `unreal-mcp` entry, which points at 8000:
+  ```json
+  {
+    "mcpServers": {
+      "unreal-mcp": { "type": "http", "url": "http://127.0.0.1:<port>/mcp" }
+    }
+  }
+  ```
+- Replace the port references in this file and `AGENTS.md`, including the Codex connection URL.
+- A value set in Editor Preferences → Model Context Protocol is saved to the per-user `Saved/Config/WindowsEditor/EditorPerProjectUserSettings.ini` and overrides the committed one, so keep that port the same, or leave it unset.
+- Restart the editor and start a new agent session so both sides pick up the port.
 
 ## Project asset organization
 
@@ -79,7 +111,7 @@ Logs go to `Saved/Logs/BlankProject.log`.
 
 `.uasset`/`.umap` files are binary, so change them through the editor and not as text. Use the `unreal-mcp` skill and its discovery flow (`list_toolsets`, `describe_toolset`, then `call_tool`) to drive the running editor. When starting unfamiliar work, check `AgentSkillToolset` for relevant project Agent Skills. Check each tool result for explicit success before continuing.
 
-The MCP server only connects while the editor is open. It auto-starts through `bAutoStartServer=True` in `Saved/Config/WindowsEditor/EditorPerProjectUserSettings.ini`. That file is per-user and not committed, so on a fresh clone run `ModelContextProtocol.StartServer` in the editor console instead. The client connects to `http://127.0.0.1:8000/mcp`.
+The MCP server only connects while the editor is open. Once the project has its own `Config/DefaultEditorPerProjectUserSettings.ini` (see "MCP port"), the server auto-starts on that port. Until then, run `ModelContextProtocol.StartServer` in the editor console. The client connects to `http://127.0.0.1:<port>/mcp`, which is 8000 for the template itself.
 
 Save affected assets before bulk changes and again afterward. Run dependent calls, and changes that touch the same asset or editor state, one at a time. Wait for compilation to finish, and check whether Play-in-Editor is running before using editor-only tools.
 
