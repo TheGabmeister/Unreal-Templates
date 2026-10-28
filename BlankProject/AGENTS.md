@@ -47,8 +47,8 @@ Every Unreal editor's MCP server defaults to port 8000, and the first editor to 
   ```
 - Point the Codex MCP connection at `http://127.0.0.1:<port>/mcp`. For Claude Code, create a project-root `.mcp.json` with an `unreal-mcp` entry at the same URL; `CLAUDE.md` has the exact file.
 - Replace the port references in this file and `CLAUDE.md`.
-- A value set in Editor Preferences → Model Context Protocol is saved to the per-user `Saved/Config/WindowsEditor/EditorPerProjectUserSettings.ini` and overrides the committed one, so keep that port the same, or leave it unset.
-- Restart the editor and start a new agent session so both sides pick up the port.
+- Do not change MCP settings in Editor Preferences → Model Context Protocol. Doing so writes a per-user copy of every MCP setting (including the default port 8000) into `Saved/Config/WindowsEditor/EditorPerProjectUserSettings.ini`, which overrides the committed file. Edit the committed file instead. If a `Saved` copy exists, delete that section with the editor closed, or delete `Saved/`.
+- Restart the editor and start a new agent session so both sides pick up the port. MCP clients read their configuration only when a session starts, so reconnecting a session that is already running keeps the old URL.
 
 ## Project asset organization
 
