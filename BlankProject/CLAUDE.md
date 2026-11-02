@@ -7,6 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Working in this project
 
 - Read `Tools/README.md` before opening, testing or packaging the project, or changing assets. It covers the engine commands and `Tools/ue.py`, which drives the editor from the command line.
+- Read "Blender to Unreal asset pipeline" in `AGENTS.md` before exporting meshes or textures from Blender, importing them, or setting up their materials.
 - Never commit `Saved/`, `Intermediate/`, `DerivedDataCache/` or other generated folders.
 
 ## Coding convention
