@@ -58,20 +58,12 @@ Use this folder structure, adding feature or asset subfolders as needed:
 
 ```text
 Content/_Project/
-├── AI/               BehaviorTrees, Blackboards
-├── Animations/       BlendSpaces, Montages
-├── Audio/            Dialogue, Music, SFX
 ├── Blueprints/       Characters, Components, Core, Gameplay, Interfaces
-├── Cinematics/
-├── Data/             Curves, DataAssets, DataTables
-├── Editor/           Project editor utilities
-├── Input/            Actions, MappingContexts
-├── Maps/             Gameplay, Tests
-├── Materials/        Functions, Instances, Master
-├── Meshes/           Skeletal, Static
-├── Textures/
-├── UI/               Fonts, Icons, Widgets
-└── VFX/              Niagara
+├── Data/
+├── Input/
+├── Maps/
+├── Materials/
+└── UI/
 ```
 
 Empty folders contain `.gitkeep` files so the structure survives Git checkout. These are placeholders, not Unreal assets. Use the editor/MCP to move or rename existing assets so references are updated; do not move `.uasset` or `.umap` files directly on disk.
