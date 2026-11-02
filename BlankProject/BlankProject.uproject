@@ -12,11 +12,7 @@
 			]
 		},
 		{
-			"Name": "ModelContextProtocol",
-			"Enabled": true
-		},
-		{
-			"Name": "AllToolsets",
+			"Name": "PythonScriptPlugin",
 			"Enabled": true
 		}
 	]

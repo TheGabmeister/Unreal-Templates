@@ -2,53 +2,22 @@
 
 This file contains the complete instructions for Codex when working in this project.
 
-## Required first step: verify the Unreal setup
-
-At the start of every session, before beginning project work, check both of these:
-
-1. **The Unreal Engine skills are available.** The skills list must include the `unreal-engine-skills-for-codex` plugin's skills: `unreal-mcp` and `unreal-skill`. Skill names may be prefixed with the plugin name. The Codex plugin does not require `create-toolset`.
-2. **The Unreal Engine MCP is working.** The `unreal-mcp` server must be connected in this session, with its tools callable (`list_toolsets`, `describe_toolset`, `call_tool`). Confirm this with a successful read-only call such as `list_toolsets`. A configured but failed or unreachable server does not count.
-
-If either check fails, **stop project work immediately**. Do not look for workarounds, such as calling the server directly over HTTP. Tell the user which check failed and what needs fixing. Setup diagnosis and user-requested updates to these instructions are allowed while the setup is incomplete.
-
-Common fixes:
-- If skills are missing, install or enable **Unreal Engine Skills for Codex** and its two skills.
-- If the MCP check fails, open the project in Unreal Editor and ensure its MCP server is running on the project's port (see "MCP port" below). Check the plugin's MCP connection in Codex, reconnect if available, or start a new session. Verify recovery with a successful read-only MCP call.
-
-A successful check does not prove the connection reaches *this* project: if another editor holds the port, calls go to that project instead. Before changing assets, confirm the connected editor is this project, for example by checking that `/Game/` contains this project's assets or that the editor log mentions this project's path.
-
 ## What this is
 
-`BlankProject` is a **Blueprint-only Unreal Engine 5.8 project template**, one of several templates in the `Unreal-Templates` repo (git root is the parent directory `D:/dev/Unreal-Templates`; the sibling `ThirdPerson/` is a separate C++ template on UE 5.7). It was created from Epic's `TP_BlankBP` template; `DefaultEngine.ini` keeps `ActiveGameNameRedirects` from `TP_BlankBP` to `/Script/BlankProject`, so do not remove them.
+`BlankProject` is a **Blueprint-only Unreal Engine 5.8 project template**. It was created from Epic's `TP_BlankBP` template; `DefaultEngine.ini` keeps `ActiveGameNameRedirects` from `TP_BlankBP` to `/Script/BlankProject`, so do not remove them.
 
 Template baseline (inspect the current files before relying on these details as the project evolves):
 - No `Source/` folder and no `Modules` in `BlankProject.uproject`, so there is nothing to compile. Adding the first C++ class (Tools → New C++ Class in the editor) creates `Source/`, `*.Target.cs` files and a module entry in the `.uproject`. After that the project needs a C++ build before it will open.
 - Project asset folders are organized under `Content/_Project/`; editor-generated `Developers/` and `Collections/` folders also exist. The startup map is the engine's `/Engine/Maps/Templates/OpenWorld` (`GameDefaultMap` in `Config/DefaultEngine.ini`), not a project asset.
-- Extra plugins: `ModelingToolsEditorMode` (editor-only), plus `ModelContextProtocol` and `AllToolsets`, which provide the `unreal-mcp` server and its tools.
-- `Saved/`, `Intermediate/` and `DerivedDataCache/` must not be committed. Before staging, check the ignore rules; if this project still has no `.gitignore`, copy `../ThirdPerson/.gitignore` and review it for this project.
+- Extra plugins: `ModelingToolsEditorMode` (editor-only) and `PythonScriptPlugin` (editor Python, used by `Tools/ue.py`).
+- `Tools/ue.py` lets agents drive the editor from the command line (see "Editing assets").
+- `.gitignore` excludes `Saved/`, `Intermediate/`, `DerivedDataCache/` and other generated files. Never commit those folders.
 
 ## Creating a new project from this template
 
-When this folder is copied and renamed into a new project:
-1. Rename `BlankProject.uproject` to `<NewName>.uproject`, point the `ActiveGameNameRedirects` in `Config/DefaultEngine.ini` at `/Script/<NewName>`, and replace the `BlankProject` names and `D:/dev/Unreal-Templates/BlankProject` paths in this file and `CLAUDE.md`.
-2. **Give the project its own MCP port.** See "MCP port" below. Skipping this is what lets two open editors collide.
+When this folder is copied and renamed into a new project, rename `BlankProject.uproject` to `<NewName>.uproject`, point the `ActiveGameNameRedirects` in `Config/DefaultEngine.ini` at `/Script/<NewName>`, and replace the `BlankProject` names and `D:/dev/Unreal-Templates/BlankProject` paths in this file and `CLAUDE.md`.
 
-## MCP port
-
-Every Unreal editor's MCP server defaults to port 8000, and the first editor to start takes it. A second editor on the same port fails to start its server without an obvious error, and agent tool calls then go to the wrong project. This template itself uses 8000, so each project made from it needs its own port:
-- Pick an unused port from 8001 upward. To see which ports are taken, search the other projects under `D:/dev` for `ServerPortNumber` in `Config/DefaultEditorPerProjectUserSettings.ini` and for `127.0.0.1:` in `.mcp.json`.
-- Create `Config/DefaultEditorPerProjectUserSettings.ini`:
-  ```ini
-  [/Script/ModelContextProtocolEngine.ModelContextProtocolSettings]
-  ServerUrlPath=/mcp
-  ServerPortNumber=<port>
-  bAutoStartServer=True
-  bEnableToolSearch=True
-  ```
-- Point the Codex MCP connection at `http://127.0.0.1:<port>/mcp`. For Claude Code, create a project-root `.mcp.json` with an `unreal-mcp` entry at the same URL; `CLAUDE.md` has the exact file.
-- Replace the port references in this file and `CLAUDE.md`.
-- Do not change MCP settings in Editor Preferences → Model Context Protocol. Doing so writes a per-user copy of every MCP setting (including the default port 8000) into `Saved/Config/WindowsEditor/EditorPerProjectUserSettings.ini`, which overrides the committed file. Edit the committed file instead. If a `Saved` copy exists, delete that section with the editor closed, or delete `Saved/`.
-- Restart the editor and start a new agent session so both sides pick up the port. MCP clients read their configuration only when a session starts, so reconnecting a session that is already running keeps the old URL.
+No port or agent configuration is needed: `Tools/ue.py` finds the project from its own location and the project's editor by its path.
 
 ## Project asset organization
 
@@ -66,7 +35,7 @@ Content/_Project/
 └── UI/
 ```
 
-Empty folders contain `.gitkeep` files so the structure survives Git checkout. These are placeholders, not Unreal assets. Use the editor/MCP to move or rename existing assets so references are updated; do not move `.uasset` or `.umap` files directly on disk.
+Empty folders contain `.gitkeep` files so the structure survives Git checkout. These are placeholders, not Unreal assets. Use the editor (for example `unreal.EditorAssetLibrary.rename_asset` through `Tools/ue.py`) to move or rename existing assets so references are updated; do not move `.uasset` or `.umap` files directly on disk.
 
 ## Engine and commands
 
@@ -96,11 +65,37 @@ Logs go to `Saved/Logs/BlankProject.log`.
 
 ## Editing assets
 
-`.uasset`/`.umap` files are binary, so change them through the editor, not as text. Use the `unreal-mcp` skill and its discovery flow (`list_toolsets`, `describe_toolset`, then `call_tool`) to drive the running editor. Check relevant project Agent Skills through `AgentSkillToolset` when starting unfamiliar work, and inspect tool results for explicit success before continuing.
+`.uasset`/`.umap` files are binary, so change them through the editor, not as text. `Tools/ue.py` runs Python inside this project's editor through Unreal's built-in Python remote execution (`PythonScriptPlugin`, enabled by `bRemoteExecution=True` in `Config/DefaultEngine.ini`). Run it from the project root:
 
-The MCP server only connects while the editor is open. Once the project has its own `Config/DefaultEditorPerProjectUserSettings.ini` (see "MCP port"), the server auto-starts on that port. Until then, run `ModelContextProtocol.StartServer` in the editor console. The client connects to `http://127.0.0.1:<port>/mcp` through the configured MCP connection, which is 8000 for the template itself.
+```powershell
+# List running editors that accept commands ("this_project" marks this one)
+python Tools/ue.py nodes
 
-Save affected assets before bulk changes and again afterward. Serialize dependent calls and mutations that affect the same asset or editor state, wait for compilation to finish, and check whether Play-in-Editor is active before using editor-only tools.
+# Run Python in this project's open editor, windowed or headless
+python Tools/ue.py exec "import unreal; print(unreal.EditorAssetLibrary.list_assets('/Game/_Project'))"
+python Tools/ue.py exec -f path/to/script.py
+
+# Start a headless editor (no window, no rendering), and quit it again
+python Tools/ue.py start --headless
+python Tools/ue.py stop
+
+# One-off headless run when no editor is open; nothing stays running afterward
+python Tools/ue.py run -f path/to/script.py
+```
+
+`exec` and `run` read the code from stdin when given neither code nor `-f`, which suits multi-line scripts.
+
+- **Pick the mode.** If this project's editor is open, use `exec`. Otherwise use `run` for a single change, or `start --headless` followed by `exec` calls for a series of changes. Each `run` and `start` loads the project, which takes about 15 seconds for this template and longer as content grows. Only one editor may have the project open, so `run` and `start` refuse while one is.
+- **Several projects at once.** Each editor is found by its project path, so editors for different projects run side by side with no port setup. Calls to the same project wait for each other.
+- **Output.** Only what the script prints is returned, plus Python warnings and errors, and a failed script exits with code 1. Print short results, such as names or counts, rather than whole objects. Logs: `Saved/Logs/BlankProject.log` for the editor, `Saved/Logs/ue_run.log` for the last `run`.
+- **Saving.** Nothing is saved automatically. Save with `unreal.EditorAssetLibrary.save_asset()` or `save_directory()`. `run` discards unsaved changes when it exits, and `stop` refuses while packages are unsaved unless given `--discard`.
+- **Headless limits.** Headless editors do not render, so there are no viewport screenshots, thumbnails or GPU work. `stop` only quits headless editors; leave a windowed editor for the user to close.
+- **Python API.** Always `import unreal`. Check names with `help()` or `dir()` through `exec` instead of guessing. Prefer editor subsystems such as `unreal.get_editor_subsystem(unreal.EditorActorSubsystem)`; the Editor Scripting Utilities libraries (`EditorLevelLibrary` and similar) are deprecated in 5.8.
+- **Python version.** `ue.py` needs Python 3.8 or later. If `python` is not installed, use the engine's `C:/Program Files/Epic Games/UE_5.8/Engine/Binaries/ThirdParty/Python3/Win64/python.exe`.
+- **Sandbox.** `ue.py` uses local network sockets and `start` launches the editor. If the sandbox blocks either (for example `nodes` finds nothing while the editor is open), rerun the command with escalated permissions.
+- **Security.** Remote execution runs any code it receives, without authentication. Keep the engine defaults that limit it to this machine (Multicast Bind Address `127.0.0.1`, TTL `0`).
+
+Save affected assets before bulk changes and again afterward. Serialize dependent calls and mutations that affect the same asset or editor state, wait for compilation to finish, and check whether Play-in-Editor is active before changing the level.
 
 ## Coding convention
 - Follow KISS and YAGNI.  Use DRY when something repeats 3 or more times.
