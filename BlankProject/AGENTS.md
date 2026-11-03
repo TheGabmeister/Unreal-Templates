@@ -33,6 +33,7 @@ Checked with Blender 5.2 and Unreal 5.8. Some of these points go against common 
   - Base color: sRGB, with no baked lighting.
   - Normal: tangent space, DirectX convention (green down), which is what Unreal expects. Blender's Normal Map node expects OpenGL, so to preview the texture in Blender, invert green in the Blender material, not in the file.
   - ORM: linear data, with R = ambient occlusion, G = roughness, B = metallic. Save as Non-Color.
+- UV packing (`bpy.ops.uv.pack_islands`) isn't deterministic: two runs of the same script place some islands differently. Rerunning the unwrap therefore changes the FBX UVs and every texture baked or painted from them, so regenerate the whole chain and reimport. Keep the intermediate bake data (out of Git) to repaint textures without unwrapping again.
 - Run Blender scripts headless with `blender -b --factory-startup -P script.py`, so the user's preferences and add-ons don't change the result. Resolve paths relative to the script, not a hard-coded root. Cycles output isn't bit-identical between runs, so rendered references always show up as changed in Git.
 - Blender's Python API changes between versions (for example, Principled BSDF input names). Look nodes up by `type`, not by name, and check socket names with `node.inputs.keys()` instead of guessing.
 
@@ -40,6 +41,7 @@ Checked with Blender 5.2 and Unreal 5.8. Some of these points go against common 
 
 - Import meshes through Interchange with *Recompute Normals/Tangents* off, so the file's normals and tangents are used. Don't import materials or textures with the mesh, don't generate lightmap UVs (static lighting is off), and keep *Offset Uniform Scale* at 1.
 - Interchange stores the pipeline used with each asset and reuses it on reimport. An override from an earlier import, such as a scale fix, comes back unless you reset it.
+- Importing from Python: a new `unreal.InterchangeGenericAssetsPipeline()` defaults to recomputing normals and tangents and to Nanite on, so set every option you rely on explicitly. Pass it in `ImportAssetParameters.override_pipelines` as `unreal.SoftObjectPath(pipeline.get_path_name())` and import with `InterchangeManager.get_interchange_manager_scripted().import_asset(...)`, which returns the imported objects, or `None` on failure (not a success flag). On reimport the asset keeps its previous settings unless the pipeline's `reimport_strategy` is `ReimportStrategyFlags.APPLY_PIPELINE_PROPERTIES`.
 - The texture importer detects normal maps (compression *Normalmap*, sRGB off) but imports packed masks such as ORM as sRGB with Default compression. Set sRGB off and compression *Masks* after every fresh import.
 - Substrate is on (see `README.md`). For metallic-workflow textures, feed base color and metallic through *Substrate Metalness-To-DiffuseAlbedo-F0* into a Slab BSDF.
 - When one node feeds two pins, `MaterialEditingLibrary` reports the same output for both. To check a material's wiring, export it to T3D with `AssetExportTask` and read each pin's `OutputIndex`.
